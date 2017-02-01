@@ -1,4 +1,3 @@
-
 // prod = use production suite for domains in following sections
 // brand = brand for pageName. e.g. 'wbc'. Subdomains of westpac.com.au are always 'wbc' brand
 // site = site for pageName. e.g. 'www'. Subdomains of westpac.com.au are used automatically as site name
@@ -187,6 +186,7 @@
                 },
                 // customisations for sites using this file
                 btRegex,
+                btMicrositeRegex,
                 //btSflRegex,
                 wbcGroupRegex,
                 movingtoaustraliaRegex,
@@ -220,9 +220,21 @@
             //	pageConfig.site = 'btsfl';
             //}
 
+            // BT External (non bt.com.au) Microsite super.towerswatson.com
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            btMicrositeRegex = /^(super)\.towerswatson\.com$/i;
+            if (btMicrositeRegex.test(location.hostname)) {
+                pageConfig.prod = true;
+            }
+            // for live host and test page
+            if (btMicrositeRegex.test(helpers.location.hostname)) {
+                pageConfig.brand = 'bt';
+                pageConfig.site = 'towerswatson';
+            }
+
             // WestpacGroup sites
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            wbcGroupRegex = /^(info|helpmechoose|rewardscalculator|businessfocus|hybrideducation|comparebusinesscreditcards)\.westpacgroup\.com\.au$/i;
+            wbcGroupRegex = /^(info|bump|helpmechoose|rewardscalculator|businessfocus|hybrideducation|comparebusinesscreditcards)\.westpacgroup\.com\.au$/i;
             // to switch on live host only
             if (wbcGroupRegex.test(location.hostname)) {
                 pageConfig.prod = true;
@@ -235,7 +247,7 @@
 
             // movingtoaustralia microsites
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            movingtoaustraliaRegex = /^movingtoaustralia(|\.westpac)\.(?:com\.au|co\.nz|co\.uk|asia)$/i;
+            movingtoaustraliaRegex = /^(www\.)?movingtoaustralia(|\.westpac)\.(?:com\.au|co\.nz|co\.uk|asia)$/i;
             // to switch on live host only
             if (movingtoaustraliaRegex.test(location.hostname)) {
                 pageConfig.prod = true;
@@ -243,7 +255,7 @@
             // for live host and test page
             if (movingtoaustraliaRegex.test(helpers.location.hostname)) {
                 pageConfig.brand = 'wbc';
-                pageConfig.site = helpers.location.hostname.replace(/(movingtoaustralia)\.westpac(\.com?)?/i, '$1');
+                pageConfig.site = helpers.location.hostname.replace(/^(www\.)?(movingtoaustralia)(\.westpac)?(\.com?)?/i, '$2');
             }
             if (/^movingtoaustralia\.westpac\.asia$/i.test(helpers.location.hostname)) {
                 pageConfig.fpCookieDomainPeriods = 2;
@@ -259,7 +271,8 @@
             // westpac partner sites (external domains)
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             //wbcPartnerRegex = /(|^www\.)(einsure|fxmoneyonline)\.com\.au$/i;
-            wbcPartnerRegex = /(|^\bwww\b\.)(einsure|fxmoneyonline)\.com\.au$/i;
+            wbcPartnerRegex = /^(|^\bwww\b\.|^elevate\.)(einsure|fxmoneyonline|agatravelinsurance)\.com\.au$/i;
+
             // to switch on live host only
             if (wbcPartnerRegex.test(location.hostname)) {
                 pageConfig.prod = true;
@@ -268,14 +281,22 @@
             if (wbcPartnerRegex.test(helpers.location.hostname)) {
                 pageConfig.brand = 'wbc';
                 //edit 1908206: added fxmoneyonline site within partnerregex
+                //eidt 230117 added agatravelinsurance and fixed einsure uat data into prod issues
 
-                var wbcPartner = helpers.location.hostname.replace(/(?:|^www\.)(einsure|fxmoneyonline)(?:\.com)(?:\.au$)/i, '$1');
-                if (wbcPartner === 'einsure') {
-                    pageConfig.site = 'einsure';
-                } else if (wbcPartner === 'fxmoneyonline') {
-                    pageConfig.site = 'travelex';
+                var wbcPartner = helpers.location.hostname.replace(/(?:|^www\.|^elevate\.)(einsure|fxmoneyonline|agatravelinsurance)(?:\.com)(?:\.au$)/i, '$1');
+                switch (wbcPartner) {
+                    case 'einsure':
+                        pageConfig.site = 'einsure';
+                        break;
+                    case 'fxmoneyonline':
+                        pageConfig.site = 'travelex';
+                        break;
+                    case 'agatravelinsurance':
+                        pageConfig.site = 'agatravel';
+                        break;
+                    default:
+                    // should there be a default? may be notset
                 }
-
             }
             // westpac 200 year anniversary site
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -322,7 +343,7 @@
 
                 // set this file date for version monitoring across all sites using this file
                 if (!pageDetails.siteVersion) {
-                    pageDetails.siteVersion = 'analytics_info.js:20160907'; // TODO: ------ Code release date to be updated with changes
+                    pageDetails.siteVersion = 'analytics_info.js:20170131'; // TODO: ------ Code release date to be updated with changes
                 }
                 // completely override report suite if required for testing
                 //pageDetails.s_un = 'westpac-dev-b'; // TODO: ------ confirm if override should be used
